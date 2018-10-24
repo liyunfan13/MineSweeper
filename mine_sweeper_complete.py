@@ -1,5 +1,4 @@
 from mine_generate import mine_generate
-import random
 
 
 class Cell:
@@ -7,6 +6,7 @@ class Cell:
         self.clues = set()
         self.reveal = 0
         self.probability = 1.0
+        self.neighbor = 0
         self.coordinate = coordinate
         self.mined = -1
 
@@ -121,19 +121,39 @@ class MineSweeper(object):
         # for i in range(front, rear):
         # print('probability', queue[i], self.cells[queue[i][0]][queue[i][1]].probability)
 
+    def get_neighbor(self):
+        around = [[-1, -1], [0, -1], [1, -1],
+                  [-1, 0], [1, 0],
+                  [-1, 1], [0, 1], [1, 1]]
+        for row in range(self.width):
+            for col in range(self.length):
+                count = 0
+                for i in range(len(around)):
+                    x_around = row + around[i][0]
+                    y_around = col + around[i][1]
+                    if x_around < 0 or y_around < 0 or x_around > self.width - 1 or y_around > self.length - 1 or \
+                            self.cells[x_around][y_around].mined != -1:
+                        continue
+                    count += 1
+                self.cells[row][col].neighbor = count
+
     def uncertainty(self, queue, visit, front, rear):
         q_prob = self.cells[queue[front][0]][queue[front][1]].probability
         c_prob = (self.num - len(self.mine_cell)) / len(self.unknown_cell)
+        self.get_neighbor()
         if q_prob > c_prob:
-            while 1:
-                x = random.randint(0, self.width-1)
-                y = random.randint(0, self.length-1)
-                if visit[x][y] == 0 and self.cells[x][y].probability == 1:
-                    print(x, y)
-                    self.cells[x][y].probability = c_prob
-                    break
-            visit[x][y] = 1
-            queue.append([x, y])
+            neighbor = 9
+            for row in range(self.width):
+                for col in range(self.length):
+                    if visit[self.cells[row][col].coordinate[0]][self.cells[row][col].coordinate[1]] == 1 or \
+                            self.cells[row][col].probability != 1:
+                        continue
+                    if self.cells[row][col].neighbor < neighbor:
+                        neighbor = self.cells[row][col].neighbor
+                        coor = self.cells[row][col].coordinate
+            self.cells[coor[0]][coor[1]].probability = c_prob
+            visit[coor[0]][coor[1]] = 1
+            queue.append([coor[0], coor[1]])
             rear += 1
             self.queue_sort(queue, front, rear)
         else:
@@ -142,9 +162,12 @@ class MineSweeper(object):
                 if self.cells[queue[i][0]][queue[i][1]].probability > q_prob:
                     break
                 i += 1
-            r = random.randint(front, i - 1)
-            t = queue[r]
-            queue[r] = queue[front]
+            pos = front
+            for j in range(front + 1, i):
+                if self.cells[queue[j][0]][queue[j][1]].neighbor < self.cells[queue[pos][0]][queue[pos][1]].neighbor:
+                    pos = j
+            t = queue[pos]
+            queue[pos] = queue[front]
             queue[front] = t
 
     def info_display(self):
