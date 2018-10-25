@@ -17,8 +17,6 @@ class MineSweeper(object):
         self.length = length
         self.num = num
 
-        self.coordinate = (0, 0)
-
         self.unknown_cell = []
         for row in range(self.width):
             for col in range(self.length):
@@ -43,9 +41,9 @@ class MineSweeper(object):
 
         self.chains = []
 
-    def reveal_query(self):
-        self.cells[self.coordinate[0]][self.coordinate[1]].reveal = int(
-            input('The state of Position (' + str(self.coordinate[0]) + ', ' + str(self.coordinate[1]) + '): '))
+    def reveal_query(self, x, y):
+        self.cells[x][y].reveal = int(
+            input('The state of Position (' + str(x) + ', ' + str(y) + '): '))
 
     def clues_get(self, x, y):
         around = [[-1, -1], [0, -1], [1, -1],
@@ -185,32 +183,25 @@ class MineSweeper(object):
         print('Mine cells: ', self.mine_cell)
         print('Clue cells: ', self.clue_cell)
 
-    def step(self):
-        if self.front < self.rear:
-            if self.cells[self.queue[self.front][0]][self.queue[self.front][1]].probability != 0:
-                self.uncertainty()
-            x, y = self.queue[self.front][0], self.queue[self.front][1]
-            self.front += 1
-            if self.cells[x][y].mined != 1:
-                self.info_display()
-                self.coordinate = (x, y)
-                self.reveal_query()
-                self.clues_get(x, y)
-                self.influence_chains(x, y)
-
-            next_step = [[-1, -1], [0, -1], [1, -1],
-                         [-1, 0], [1, 0],
-                         [-1, 1], [0, 1], [1, 1]]
-            for i in range(len(next_step)):
-                x_next = x + next_step[i][0]
-                y_next = y + next_step[i][1]
-                if x_next < 0 or y_next < 0 or x_next > self.width - 1 or y_next > self.length - 1 or \
-                        self.visit[x_next][y_next] == 1:
-                    continue
-                self.visit[x_next][y_next] = 1
-                self.queue.append([x_next, y_next])
-                self.rear += 1
-            self.queue_sort()
+    def op_queue(self):
+        self.queue_sort()
+        if self.cells[self.queue[self.front][0]][self.queue[self.front][1]].probability != 0:
+            self.uncertainty()
+        x, y = self.queue[self.front][0], self.queue[self.front][1]
+        self.front += 1
+        next_step = [[-1, -1], [0, -1], [1, -1],
+                     [-1, 0], [1, 0],
+                     [-1, 1], [0, 1], [1, 1]]
+        for i in range(len(next_step)):
+            x_next = x + next_step[i][0]
+            y_next = y + next_step[i][1]
+            if x_next < 0 or y_next < 0 or x_next > self.width - 1 or y_next > self.length - 1 or \
+                    self.visit[x_next][y_next] == 1:
+                continue
+            self.visit[x_next][y_next] = 1
+            self.queue.append([x_next, y_next])
+            self.rear += 1
+        return x, y
 
     def mine_sweeper(self):
         game_over = False
@@ -223,8 +214,7 @@ class MineSweeper(object):
             self.front += 1
             if self.cells[x][y].mined != 1:
                 self.info_display()
-                self.coordinate = (x, y)
-                self.reveal_query()
+                self.reveal_query(x, y)
                 if self.cells[x][y].reveal == -1:
                     game_over = True
                     break
@@ -262,9 +252,15 @@ if __name__ == '__main__':
     # mine_sweeper.mine_sweeper()
 
     while 1:
-        if mine_sweeper.cells[mine_sweeper.coordinate[0]][mine_sweeper.coordinate[1]].reveal == -1:
+        x, y = mine_sweeper.op_queue()
+        if mine_sweeper.cells[x][y].mined != 1:
+            # mine_sweeper.cells[x][y].reveal = int(
+                # input('The state of Position (' + str(x) + ', ' + str(y) + '): '))
+            mine_sweeper.clues_get(x, y)
+            mine_sweeper.influence_chains(x, y)
+
+        if mine_sweeper.cells[x][y].reveal == -1:
             break
-        if not len(mine_sweeper.unknown_cell) or len(mine_sweeper.mine_cell) == num:
+        if len(mine_sweeper.mine_cell) == num or not len(mine_sweeper.unknown_cell):
             mine_sweeper.info_display()
             break
-        mine_sweeper.step()
