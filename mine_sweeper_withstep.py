@@ -183,7 +183,7 @@ class MineSweeper(object):
         print('Mine cells: ', self.mine_cell)
         print('Clue cells: ', self.clue_cell)
 
-    def op_queue(self):
+    def step(self):
         self.queue_sort()
         if self.cells[self.queue[self.front][0]][self.queue[self.front][1]].probability != 0:
             self.uncertainty()
@@ -252,7 +252,7 @@ if __name__ == '__main__':
     # mine_sweeper.mine_sweeper()
 
     while 1:
-        x, y = mine_sweeper.op_queue()
+        x, y = mine_sweeper.step()
         if mine_sweeper.cells[x][y].mined != 1:
             # mine_sweeper.cells[x][y].reveal = int(
                 # input('The state of Position (' + str(x) + ', ' + str(y) + '): '))
