@@ -262,5 +262,5 @@ if __name__ == '__main__':
         if mine_sweeper.cells[x][y].reveal == -1:
             break
         if len(mine_sweeper.mine_cell) == num or not len(mine_sweeper.unknown_cell):
-            mine_sweeper.info_display()
+            # mine_sweeper.info_display()
             break
