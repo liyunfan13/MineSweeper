@@ -1,4 +1,5 @@
 from mine_generate import mine_generate
+import random
 
 
 class Cell:
@@ -66,7 +67,6 @@ class MineSweeper(object):
             self.clear_cell.append([x, y])
             self.cells[x][y].mined = 0
         self.cells[x][y].clues = clues
-        self.renew_chains(x, y)
 
     def renew_chains(self, x, y):
         for chain in self.chains:
@@ -205,6 +205,7 @@ class MineSweeper(object):
 
     def mine_sweeper(self):
         game_over = False
+        receive_prob = 0.9
         while self.front < self.rear:
             if len(self.unknown_cell) == 0 or len(self.mine_cell) == self.num:
                 break
@@ -218,7 +219,8 @@ class MineSweeper(object):
                 if self.cells[x][y].reveal == -1:
                     game_over = True
                     break
-                self.clues_get(x, y)
+                if random.random() < receive_prob:
+                    self.clues_get(x, y)
                 self.influence_chains(x, y)
 
             next_step = [[-1, -1], [0, -1], [1, -1],
@@ -248,6 +250,7 @@ if __name__ == '__main__':
     board = mine_generate(width, length, num)
     print(board)
 
+    receive_prob = 1
     mine_sweeper = MineSweeper(width, length, num)
     # mine_sweeper.mine_sweeper()
 
@@ -256,7 +259,8 @@ if __name__ == '__main__':
         if mine_sweeper.cells[x][y].mined != 1:
             # mine_sweeper.cells[x][y].reveal = int(
                 # input('The state of Position (' + str(x) + ', ' + str(y) + '): '))
-            mine_sweeper.clues_get(x, y)
+            if random.random() < receive_prob:
+                mine_sweeper.clues_get(x, y)
             mine_sweeper.influence_chains(x, y)
 
         if mine_sweeper.cells[x][y].reveal == -1:
